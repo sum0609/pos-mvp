@@ -6,6 +6,7 @@ import ProductsScreen from './screens/ProductsScreen';
 import TableSettingsScreen from './screens/TableSettingsScreen';
 import AddonCategoryScreen from './screens/AddonCategoryScreen';
 import AddonListScreen from './screens/AddonListScreen';
+import ProductAddonMapping from './screens/ProductAddonMapping';
 import StaffScreen from './screens/StaffScreen';
 import ReportsScreen from './screens/ReportsScreen';
 import POS from './screens/POS';
@@ -68,7 +69,7 @@ function App() {
   const { cart, setCart, heldOrders, setHeldOrders, paying, setPaying, discount, setDiscount, 
     deposit, setDeposit, depositInput, setDepositInput, depositCents, setDepositCents, currentDepositCents,
     loadHeldOrders, totals, addToCart, removeFromCart, changeQty, updateCartNote, handleClearCart, 
-    holdCurrentOrder, loadHeldOrder, payNow, updateItemCourse } = useCart(user);
+    holdCurrentOrder, loadHeldOrder, payNow, updateItemCourse, addonModal, setAddonModal, executeAdd,editCartItem } = useCart(user);
 
 
 
@@ -206,7 +207,11 @@ useEffect(() => {
             setPaying={setPaying}
             currency={currency}
             toSentenceCase={toSentenceCase}
-            updateItemCourse={updateItemCourse} />
+            updateItemCourse={updateItemCourse}
+            addonModal={addonModal}
+            setAddonModal={setAddonModal}
+            executeAdd={executeAdd}
+            editCartItem={editCartItem} />
         )}
 
         {screen === 'menus' && (<MenusScreen menus={menus} refreshMenus={loadMenus}/>)}
@@ -215,6 +220,7 @@ useEffect(() => {
         {screen === 'tables' && <TableSettingsScreen />}
         {screen === 'addon_categories' && <AddonCategoryScreen />}
         {screen === 'addon_list' && <AddonListScreen />}
+        {screen === 'product_addon_map' && <ProductAddonMapping />}
         {screen === 'staff' && <StaffScreen />}         
         {screen === 'reports' && <ReportsScreen />}
         {screen === 'held' && <HeldOrdersScreen heldOrders={heldOrders} onResume={loadHeldOrder} refresh={loadHeldOrders} />}

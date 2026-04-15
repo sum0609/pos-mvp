@@ -276,12 +276,14 @@ button, input, select { font: inherit; }
 
 /* LEFT SIDE */
 .cart-item-left {
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 10px;
   min-width: 220px;
+  flex: 1; /* Allow left side to grow */
+  padding-right: 15px; /* Space between prices and qty buttons */
 }
+
 /* RIGHT SIDE */
 .cart-item-right {
   display: flex;
@@ -335,6 +337,8 @@ button, input, select { font: inherit; }
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
+
+
 .unit-price {
   font-size: 1.1rem;font-weight: 500;
   color: #64748b;
@@ -350,8 +354,8 @@ button, input, select { font: inherit; }
   padding: 0 5px;
   transition: color 0.2s;
   position: absolute;
-    top: 12px;
-    right: 8px;
+    top: 2px;
+    right: 0px;
     background: transparent;
     font-size: 1.4rem;
     z-index: 2;
@@ -377,6 +381,10 @@ button, input, select { font: inherit; }
     border-radius: 12px; */
 }
 
+.qty-box {
+  margin-top: 10px;
+}
+
 .qty-btn {
     background: white;
     border: 1px solid #e2e8f0;
@@ -395,6 +403,18 @@ button, input, select { font: inherit; }
     /* padding: 0 12px; */
     font-weight: 600;
     font-size: 0.8rem;
+}
+
+.qty-box-inline {
+  display: flex;
+  align-items: center;
+  /* background: #f8f9fa; */
+  /* border-radius: 6px; */
+  /* padding: 2px; */
+  /* border: 1px solid #ddd; */
+  /* white-space: nowrap; */
+  height: fit-content;
+  gap: 8px;
 }
 
 /* TOTALS */
@@ -856,6 +876,9 @@ hr {
   align-items: center;
   gap: 12px;
   background: #fafafa; /* Subtle contrast from the white cart */
+
+  flex-direction: row;
+  white-space: nowrap; /* Forces everything to stay on one line */
 }
 
 .discount-controls span, .deposit-section span {
@@ -905,17 +928,35 @@ input::-webkit-inner-spin-button {
 
 .preset-buttons {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  /* flex-wrap: wrap; */
+
+  flex-direction: row;
+  flex-wrap: nowrap; /* Prevents wrapping to the next line */
+  align-items: center;
+  gap: 8px; /* Space between buttons */
+  overflow-x: auto; /* Adds horizontal scroll if items exceed width */
+  scrollbar-width: none; /* Hides scrollbar on Firefox */
+}
+
+.preset-buttons::-webkit-scrollbar {
+  display: none; /* Hides scrollbar on Chrome/Safari */
+}
+
+.custom-input-wrapper {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0; /* Prevents the input box from getting squashed */
+  gap: 4px;
 }
 
 .btn-pill {
-  padding: 6px 12px;
+  padding: 6px;
   border-radius: 20px;
   border: 1px solid #e2e8f0;
   background: white;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.8rem;
 }
 
 .btn-pill.active {
@@ -925,13 +966,20 @@ input::-webkit-inner-spin-button {
 }
 
 .input-inline {
-  width: 80px;
+  width: 60px;
   padding: 6px;
   border-radius: 8px;
   border: 1px solid #cbd5e1;
   text-align: center;
+  -moz-appearance: textfield; /* Hides arrows in Firefox */
 }
 
+/* Hides the up/down arrows (spinners) in Chrome/Safari/Edge */
+.input-inline::-webkit-outer-spin-button,
+.input-inline::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
 .grand-total-row {
   border-top: 1px solid #e2e8f0;
   margin-top: 8px;
@@ -1230,3 +1278,125 @@ input::-webkit-inner-spin-button {
 .held-row:hover .edit-indicator {
   opacity: 1;
 }
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+.modal-content.addon-selection {
+  background: white; padding: 20px; border-radius: 12px;
+  width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;
+}
+.addon-group { margin-bottom: 20px; }
+.addon-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.addon-item-btn {
+  padding: 15px; border: 2px solid #ddd; border-radius: 8px; background: white;
+  display: flex; flex-direction: column; cursor: pointer;
+}
+.addon-item-btn.active { border-color: var(--primary); background: #f0f7ff; }
+
+.cart-item-treeview {
+  margin: 5px 0 10px 10px;
+  border-left: 1px dashed #ccc;
+  padding-left: 8px;
+}
+
+.treeview-group {
+  margin-bottom: 4px;
+}
+
+.treeview-header {
+  color: #888;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+  font-size: 0.9rem;
+}
+
+.treeview-item {
+  padding-left: 12px;
+  display: flex;
+  justify-content: space-between;
+  color: #666;
+  font-size: 0.9rem;
+  align-items: center;
+  width: 100%; /* Ensure it spans the full width of cart-item-left */
+  padding: 2px 0;
+}
+
+.price-addon {
+  font-family: monospace;
+  color: #666;
+}
+
+.product-name:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* Ensure the main container is a flexbox */
+.cart-item-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+
+.cart-item-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* Aligns all prices and qty to the right */
+  min-width: 80px; /* Adjust based on your currency length */
+  text-align: right;
+}
+
+/* Match the height of the product name and headers */
+.main-price-row {
+  height: 24px; /* Adjust to match .product-name line-height */
+  display: flex;
+  align-items: center;
+}
+
+/* Match the height of the addon rows in the treeview */
+.addon-price-row {
+  height: 20px; /* Adjust to match .treeview-item line-height */
+  display: flex;
+  align-items: center;
+  color: #666;
+}
+
+
+/* Helper class used in the component */
+.flex-row {
+  display: flex;
+  flex-direction: row;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+
+.align-center {
+  align-items: center;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+.gap-2 {
+  gap: 10px;
+}
+
+
+
+.price-addon, .unit-price {
+  font-family: 'Courier New', Courier, monospace; /* Monospace keeps decimals aligned */
+  text-align: right;
+  min-width: 60px; /* Ensures all prices start from a similar anchor point */
+}
+
+

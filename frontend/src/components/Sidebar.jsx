@@ -21,6 +21,7 @@ export default function Sidebar({ screen, setScreen, onLogout }) {
     <button className={`side-btn ${screen === 'tables' ? 'active' : ''}`} onClick={() => setScreen('tables')}>Tables</button>
     <button className={`side-btn ${screen === 'addon_categories' ? 'active' : ''}`} onClick={() => setScreen('addon_categories')}>Add-On Categories</button>
     <button className={`side-btn ${screen === 'addon_list' ? 'active' : ''}`} onClick={() => setScreen('addon_list')}>Add-On List</button>
+    <button className={`side-btn ${screen === 'product_addon_map' ? 'active' : ''}`} onClick={() => setScreen('product_addon_map')}>Product Add-On Map</button>
     <button className={`side-btn ${screen === 'staff' ? 'active' : ''}`} onClick={() => setScreen('staff')}>Staff</button>
     <button className={`side-btn ${screen === 'reports' ? 'active' : ''}`} onClick={() => setScreen('reports')}>Reports</button>
     <button className={`side-btn ${screen === 'held' ? 'active' : ''}`} onClick={() => setScreen('held')}>Held Orders</button>

@@ -530,3 +530,34 @@ app.put('/addon_items/:id', (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Get all mappings for a specific product
+app.get('/product-addons/:productId', (req, res) => {
+  const rows = db.prepare(`
+    SELECT ac.* FROM addon_categories ac
+    JOIN product_addon_map pam ON ac.id = pam.addon_category_id
+    WHERE pam.product_id = ?
+    ORDER BY pam.sort_order
+  `).all(req.params.productId);
+  res.json(rows);
+});
+
+// Update mappings for a product
+app.post('/product-addons/:productId', (req, res) => {
+  const { categoryIds } = req.body; // Array of IDs: ['cat1', 'cat2']
+  const productId = req.params.productId;
+
+  const transaction = db.transaction(() => {
+    // 1. Clear existing mappings for this product
+    db.prepare('DELETE FROM product_addon_map WHERE product_id = ?').run(productId);
+
+    // 2. Insert new mappings
+    const insert = db.prepare('INSERT INTO product_addon_map (product_id, addon_category_id, sort_order) VALUES (?, ?, ?)');
+    categoryIds.forEach((catId, index) => {
+      insert.run(productId, catId, index);
+    });
+  });
+
+  transaction();
+  res.json({ ok: true });
+});

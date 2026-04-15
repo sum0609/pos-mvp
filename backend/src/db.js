@@ -155,6 +155,17 @@ CREATE TABLE IF NOT EXISTS addon_items (
     FOREIGN KEY (category_id) REFERENCES addon_categories(id)
   );
 
+  -- 11. product_addon_map
+  CREATE TABLE IF NOT EXISTS product_addon_map (
+    product_id TEXT NOT NULL,
+    addon_category_id TEXT NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (product_id, addon_category_id),
+    FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+    FOREIGN KEY (addon_category_id) REFERENCES addon_categories(id) ON DELETE CASCADE
+  );
+
 -- PERFORMANCE INDEXES
 CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
