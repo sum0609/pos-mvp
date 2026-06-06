@@ -25,7 +25,7 @@ button, input, select { font: inherit; }
   min-height: 100vh;
 }
 .content { padding: 20px; }
-.topbar { margin-bottom: 16px; }
+/* .topbar { margin-bottom: 16px; } */
 .card {
   background: white;
   border-radius: 18px;
@@ -599,6 +599,29 @@ button, input, select { font: inherit; }
   font-size: 0.85rem;
   letter-spacing: 0.05em;
   color: var(--text-muted);
+}
+
+.pos-plan-tabs {
+  display: flex;
+  gap: 8px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+}
+
+.plan-tab {
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: none;
+  background: #f1f5f9;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.plan-tab.active {
+  background: var(--primary);
+  color: white;
 }
 
 /* MENU TABS */
@@ -1399,4 +1422,145 @@ input::-webkit-inner-spin-button {
   min-width: 60px; /* Ensures all prices start from a similar anchor point */
 }
 
+.table-grid-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.table-card-v2 {
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: transform 0.2s;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.table-card-v2.available { background: #ffffff; border: 2px solid #e2e8f0; }
+.table-card-v2.occupied { background: #fee2e2; border: 2px solid #ef4444; }
+
+.seat-dot {
+  width: 8px;
+  height: 8px;
+  background: #cbd5e1;
+  border-radius: 50%;
+  display: inline-block;
+  margin: 2px;
+}
+
+.table-card-v2.occupied .seat-dot { background: #f87171; }
+
+.status-badge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+
+.pos-header-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 10px;
+}
+.pos-menu-nav {
+  display: flex row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 10px;
+}
+
+.btn-back {
+  padding: 8px 16px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-back:hover {
+  background: #e2e8f0;
+}
+
+.floor-plan-container {
+  padding: 20px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+.table-grid-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 20px;
+}
+
+.table-card-v2 {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.table-card-v2:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+}
+
+/* Status Colors */
+.table-card-v2.available { border-top: 5px solid #22c55e; }
+.table-card-v2.occupied { border-top: 5px solid #ef4444; background-color: #fff1f2; }
+
+.table-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.table-name { font-weight: 700; font-size: 1.1rem; }
+
+.status-badge {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: #f1f5f9;
+}
+
+.seats-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.seat-dot {
+  width: 10px;
+  height: 10px;
+  background: #cbd5e1;
+  border-radius: 50%;
+}
+
+.table-card-v2.occupied .seat-dot {
+  background: #f87171;
+}
 

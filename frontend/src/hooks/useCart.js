@@ -4,7 +4,7 @@ import { api } from '../api';
 
 import {currency, isCategoryAvailable, toSentenceCase} from '../utils/helpers';
 
-export default function useCart(user) {
+export default function useCart(user,activeTable) {
 
   const [cart, setCart] = useState([]);
 
@@ -22,8 +22,15 @@ export default function useCart(user) {
 
 
   async function loadHeldOrders() {
-    setHeldOrders(await api.getOrders('held'));
+  try {
+    const data = await api.getOrders('held');
+    console.log("SUCCESS! Loaded Rich Rows:", data);
+    setHeldOrders(Array.isArray(data) ? data : []);
+  } catch (err) {
+    console.error("Failed to load rich held orders array:", err);
+    setHeldOrders([]);
   }
+}
 
   // --- Cart Logic (Using Cents) ---
   // const totals = useMemo(() => {
@@ -71,7 +78,7 @@ export default function useCart(user) {
       const baseLineTotal = item.qty * item.base_price_cents;
       
       // Calculate addons total for this line
-      const addonsLineTotal = item.addons.reduce((sum, a) => 
+      const addonsLineTotal = (item.addons || []).reduce((sum, a) => 
         sum + (item.qty * a.price_cents), 0
       );
 
@@ -168,45 +175,100 @@ export default function useCart(user) {
     // });
   }
 
-  // Helper to actually push to cart state
-function executeAdd(product, selectedAddons = []) {
-  const addonTotal = selectedAddons.reduce((sum, a) => sum + a.price_cents, 0);
-  
-  setCart((current) => {
-    // We treat products with different add-ons as unique line items
-    // So we generate a unique key based on selections
+  function buildCartItem(product, selectedAddons = [], qty = 1) {
+    const basePrice = Number(product.price_cents ?? product.base_price_cents ?? 0);
+    
+    const addonTotal = selectedAddons.reduce((sum, a) => sum + Number(a.price_cents || 0), 0);
     const addonKey = selectedAddons.map(a => a.id).sort().join('-');
-    const cartItemId = `${product.id}-${addonKey}`;
-
-    const existing = current.find((item) => item.cart_item_id === cartItemId);
-    if (existing) {
-      return current.map((item) => 
-        item.cart_item_id === cartItemId ? { ...item, qty: item.qty + 1 } : item
-      );
-    }
+    const cartItemId = `${product.id}-${addonKey || 'no-addons'}-${Math.random().toString(36).substr(2, 9)}`;
 
     const courseMap = { 0: "Starter", 1: "Main", 2: "Dessert", 3: "Drinks" };
 
-
-    const defaultCourse = courseMap[product.category_type] || "Main";
-
-
-    return [...current, {
-      cart_item_id: cartItemId, // Unique ID for specific configuration
+    return {
+      cart_item_id: cartItemId,
       product_id: product.id,
       product_name: product.name,
-      qty: 1,
-      base_price_cents: product.price_cents, // Keep base price separate
-      unit_price_cents: product.price_cents + addonTotal,
-      vat_percent: product.vat_percent,
+      qty: qty,
+      base_price_cents: basePrice,
+      unit_price_cents: basePrice + addonTotal,
+      vat_percent: Number(product.vat_percent || 0),
       is_discountable: product.is_discountable,
-      note: "",
-      course: defaultCourse,
-      addons: selectedAddons, // Structured data
-      category_type: product.category_type // Keep for re-editing
-    }];
+      note: product.note || "",
+      course: product.course || courseMap[product.category_type] || "Main",
+      addons: selectedAddons,
+      category_type: product.category_type
+    };
+  }
+  
+  function executeAdd(product, selectedAddons = [], isEditingId = null) {
+  const newItem = buildCartItem(product, selectedAddons);
+  
+  setCart((current) => {
+    // 1. If we are explicitly modifying an existing line item, swap it out directly!
+    if (isEditingId) {
+      return current.map((item) => 
+        item.cart_item_id === isEditingId 
+          ? { 
+              ...newItem, 
+              cart_item_id: isEditingId, // Maintain original tracking ID
+              qty: item.qty // Maintain original quantity
+            } 
+          : item
+      );
+    }
+
+    // 2. Otherwise, treat as a normal add action
+    const existing = current.find((item) => 
+      item.product_id === newItem.product_id && 
+      JSON.stringify(item.addons) === JSON.stringify(newItem.addons)
+    );
+
+    if (existing) {
+      return current.map((item) => 
+        item.cart_item_id === existing.cart_item_id ? { ...item, qty: item.qty + 1 } : item
+      );
+    }
+    return [...current, newItem];
   });
 }
+// function executeAdd(product, selectedAddons = []) {
+//   const addonTotal = selectedAddons.reduce((sum, a) => sum + a.price_cents, 0);
+  
+//   setCart((current) => {
+//     // We treat products with different add-ons as unique line items
+//     // So we generate a unique key based on selections
+//     const addonKey = selectedAddons.map(a => a.id).sort().join('-');
+//     const cartItemId = `${product.id}-${addonKey}`;
+
+//     const existing = current.find((item) => item.cart_item_id === cartItemId);
+//     if (existing) {
+//       return current.map((item) => 
+//         item.cart_item_id === cartItemId ? { ...item, qty: item.qty + 1 } : item
+//       );
+//     }
+
+//     const courseMap = { 0: "Starter", 1: "Main", 2: "Dessert", 3: "Drinks" };
+
+
+//     const defaultCourse = courseMap[product.category_type] || "Main";
+
+
+//     return [...current, {
+//       cart_item_id: cartItemId, // Unique ID for specific configuration
+//       product_id: product.id,
+//       product_name: product.name,
+//       qty: 1,
+//       base_price_cents: product.price_cents, // Keep base price separate
+//       unit_price_cents: product.price_cents + addonTotal,
+//       vat_percent: product.vat_percent,
+//       is_discountable: product.is_discountable,
+//       note: "",
+//       course: defaultCourse,
+//       addons: selectedAddons, // Structured data
+//       category_type: product.category_type // Keep for re-editing
+//     }];
+//   });
+// }
 
   const removeFromCart = (cartItemId, silent = false) => {
     if (silent) {
@@ -225,9 +287,9 @@ function executeAdd(product, selectedAddons = []) {
   );
 }
 
-  function updateCartNote(productId, note) {
+  function updateCartNote(cartItemId, note) { // <-- Change from productId to cartItemId
     setCart(current => current.map(item => 
-      item.product_id === productId ? { ...item, note } : item
+      item.cart_item_id === cartItemId ? { ...item, note } : item
     ));
   }
 
@@ -242,66 +304,134 @@ function executeAdd(product, selectedAddons = []) {
   };
   
   async function holdCurrentOrder() {
-    if (!cart.length|| !user) return;
-    await api.holdOrder({ user_id: user.id, items: cart, order_type: 'walk_in' });
+  if (!cart.length || !user) return;
+  
+  try {
+    const existingOrderId = activeTable?.order_id || null;
+
+    await api.holdOrder({ 
+      user_id: user.id, 
+      items: cart, 
+      order_type: activeTable ? 'dine-in' : 'walk_in',
+      order_id: existingOrderId,
+      // ADD THESE NEW PAYLOAD FIELDS:
+      discount_percent: discount,
+      deposit_amount_cents: currentDepositCents
+    });
+    
     setCart([]);
-    loadHeldOrders();
-    alert('Order held');
+    setDiscount(0);
+    setDepositInput("");
+    
+    await loadHeldOrders(); 
+    alert('Order held successfully!');
+  } catch (err) {
+    console.error("Failed to hold order:", err);
+    alert(err.message);
   }
+}
 
   async function loadHeldOrder(orderId) {
-    const order = await api.getOrder(orderId);
-    setCart(order.items.map((item) => ({
+  const order = await api.getOrder(orderId);
+
+  const parseAddons = (addons) => {
+    if (!addons) return [];
+    if (Array.isArray(addons)) return addons;
+    try { return JSON.parse(addons); } catch (e) { return []; }
+  };
+  
+  const restoredCart = order.items.map(item => {
+    const parsedAddons = parseAddons(item.addons);
+    const addonKey = parsedAddons.map(a => a.id).sort().join('-');
+    const stableCartItemId = item.cart_item_id || `${item.product_id}-${addonKey || 'no-addons'}`;
+    const courseMap = { 0: "Starter", 1: "Main", 2: "Dessert", 3: "Drinks" };
+
+    return {
+      cart_item_id: stableCartItemId,
       product_id: item.product_id,
       product_name: item.product_name,
       qty: item.qty,
-      unit_price: item.unit_price,
+      base_price_cents: item.base_price_cents || item.unit_price_cents,
+      unit_price_cents: item.unit_price_cents,
       vat_percent: item.vat_percent,
       is_discountable: item.is_discountable,
-      note: ""
-    })));
-    await api.cancelOrder(orderId);
-    loadHeldOrders();
-    setScreen('pos');
+      note: item.note || "",
+      course: item.course || courseMap[item.category_type] || "Main",
+      addons: parsedAddons,
+      category_type: item.category_type
+    };
+  });
+
+  setCart(restoredCart); 
+  
+  // RESTORE SAVED DISCOUNTS AND DEPOSITS BACK TO STATE
+  if (order.discount_percent) {
+    setDiscount(Number(order.discount_percent));
+  } else {
+    setDiscount(0);
   }
 
-  async function payNow({ amount_paid_cents, method }) {
-    if (!user) return alert("Error: No user logged in");
-    try {
-      const orderData = {
-        user_id: user.id,
-        items: cart, // The array containing notes, qty, etc.
-        
-        // Global Totals from your totals useMemo
-        discount_percent: discount,
-        discount_total_cents: totals.discountAmountCents,
-        deposit_amount_cents: currentDepositCents,
-        
-        subtotal_cents: totals.subtotalCents,
-        vat_total_cents: totals.totalVatCents,
-        grand_total_cents: totals.orderGrandTotal,
-        
-        // Payment details
-        amount_paid_cents: amount_paid_cents, // e.g., the £20 note they handed you
-        payment_method: method
-      };
+  if (order.deposit_amount_cents) {
+    // Convert cents back to string decimals for your text input field box format
+    setDepositInput((order.deposit_amount_cents / 100).toFixed(2));
+  } else {
+    setDepositInput("");
+  }
 
-      const res = await api.payOrder(orderData);
-      
-      // Success: Clear everything
-      setCart([]);
-      setDiscount(0);
-      setDepositInput("");
-      setPaying(false);
-      alert(`Order #${res.order_no} Paid! Change: ${currency(res.change_due_cents)}`);
-    } catch (e) {
-      alert("Payment failed: " + e.message);
+  await api.cancelOrder(orderId); 
+  await loadHeldOrders();
+  return true;
+}
+
+
+  async function payNow({ amount_paid_cents, method }, activeTable) { // <--- Add activeTable here
+  if (!user) return alert("Error: No user logged in");
+  try {
+    const orderData = {
+      order_id: activeTable?.order_id || null,
+      user_id: user.id,
+      items: cart,
+      discount_percent: discount,
+      discount_total_cents: totals.discountAmountCents,
+      deposit_amount_cents: currentDepositCents,
+      subtotal_cents: totals.subtotalCents,
+      vat_total_cents: totals.totalVatCents,
+      grand_total_cents: totals.orderGrandTotal,
+      amount_paid_cents: amount_paid_cents,
+      payment_method: method
+    };
+
+    const res = await api.payOrder(orderData);
+    
+    // Only try to close the session if this was a table order
+    // if (activeTable && activeTable.session_id) {
+    //    await api.closeTableSession(activeTable.session_id);
+    // }
+
+    if (activeTable?.session_id) {
+      await api.closeTableSession(activeTable.session_id);
     }
-  } 
 
-  function updateItemCourse(productId, course) {
+    setCart([]);
+    setDiscount(0);
+    setDepositInput("");
+    setPaying(false);
+    
+    alert(`Order #${res.order_no} Paid! Change: ${currency(res.change_due_cents)}`);
+
+    // These need to be handled by a callback or passed in if you want to switch views here
+    // Better yet, return 'true' so App.jsx can handle the navigation
+    return { success: true }; 
+
+  } catch (e) {
+    alert("Payment failed: " + e.message);
+    return { success: false };
+  }
+}
+
+  function updateItemCourse(cartItemId, course) { // <-- Change from productId to cartItemId
     setCart(current => current.map(item => 
-      item.product_id === productId ? { ...item, course } : item
+      item.cart_item_id === cartItemId ? { ...item, course } : item
     ));
   }
 
@@ -313,10 +443,10 @@ function executeAdd(product, selectedAddons = []) {
       const categoriesWithItems = mappedCategories.map(cat => ({
         ...cat,
         items: allItems
-          .filter(item => item.category_id === cat.id)
-          .map(item => ({ 
-            ...item, 
-            category_name: cat.name // Add this line to attach the name
+          .filter(addon => addon.category_id === cat.id)
+          .map(addon => ({ 
+            ...addon, 
+            category_name: cat.name 
           }))
       }))
       .filter(cat => cat.items.length > 0);
@@ -324,10 +454,15 @@ function executeAdd(product, selectedAddons = []) {
       // Open modal but pass the existing selections
       setAddonModal({ 
         show: true, 
-        product: { id: item.product_id, name: item.product_name, price_cents: item.base_price_cents, category_type: item.category_type }, 
+        product: { 
+          id: item.product_id, 
+          name: item.product_name, 
+          price_cents: item.base_price_cents, // explicitly pass base_price_cents as price_cents
+          category_type: item.category_type 
+        }, 
         categories: categoriesWithItems,
-        existingSelections: item.addons,
-        isEditing: item.cart_item_id // Track which specific line we are editing
+        existingSelections: item.addons || [],
+        isEditing: item.cart_item_id 
       });
     } catch (err) {
       console.error("Edit failed", err);

@@ -3,7 +3,7 @@ import { api, toCents, fromCents } from '../api';
 
 import {currency, isCategoryAvailable, toSentenceCase} from '../utils/helpers';
 
-export default function PaymentModal({ user, totalCents, onClose, onPay }) {
+export default function PaymentModal({ user, totalCents, onClose, onPay, onConfirm }) {
   const [method, setMethod] = useState('card'); // 'card' or 'cash'
   const [receivedInput, setReceivedInput] = useState(fromCents(totalCents));
   // const [tipInput, setTipInput] = useState("0");
@@ -82,9 +82,13 @@ export default function PaymentModal({ user, totalCents, onClose, onPay }) {
           
           <button 
             className="btn primary settle-btn" 
-            onClick={() => onPay({
+            // onClick={() => onPay({
+            //   amount_paid_cents: receivedCents,
+            //   // tip_cents: tipCents,
+            //   method: method
+            // })}
+            onClick={() => onConfirm({ // <--- Use onConfirm instead of onPay
               amount_paid_cents: receivedCents,
-              // tip_cents: tipCents,
               method: method
             })}
           >

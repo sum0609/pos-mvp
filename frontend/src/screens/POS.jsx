@@ -1,74 +1,105 @@
 
 
-import React from 'react';
+import React, { useState } from 'react';
 import AddonModal from '../components/AddonModal';
 
 export default function POS({
   // Data
-  availableCategories,
-  activeMenu,
-  activeCategory,
-  products,
-  cart,
-  totals,
-  discount,
-  depositInput,
-  currentDepositCents,
+  availableCategories, activeMenu, activeCategory, products, cart, totals, 
+  discount, depositInput, currentDepositCents,
   // Actions
-  setActiveCategory,
-  addToCart,
-  removeFromCart,
-  changeQty,
-  updateCartNote,
-  setDiscount,
-  setDepositInput,
-  handleClearCart,
-  holdCurrentOrder,
-  setPaying,
+  setActiveCategory, addToCart, removeFromCart, changeQty, updateCartNote, setDiscount,
+  setDepositInput, handleClearCart, holdCurrentOrder, setPaying,
   // Utils
-  currency,
-  toSentenceCase, 
-  updateItemCourse, addonModal, setAddonModal, executeAdd, editCartItem
+  currency, toSentenceCase, updateItemCourse, addonModal, setAddonModal, 
+  executeAdd, editCartItem,  handleCancelTable,
+//   posView, setPosView,
+  availableMenus, setActiveMenu, posContext,onBackToFloor,getContextLabel
 }) {
   return (
     <> {/* Start Fragment */}
     {addonModal.show && (
-      <AddonModal 
-        modalData={addonModal}
-        onClose={() => setAddonModal({ show: false })}
-        onConfirm={(product, selections) => {
-            // 1. If we are editing, remove the SPECIFIC old row first
-            if (addonModal.isEditing) {
-                removeFromCart(addonModal.isEditing, true); // Use the 'silent' flag we created
-            }
-          executeAdd(product, selections);
-          setAddonModal({ show: false });
-        }}
-        currency={currency}
-      />
-    )}
+        <AddonModal 
+            modalData={addonModal}
+            onClose={() => setAddonModal({ show: false })}
+            onConfirm={(product, selections) => {
+            // Pass the editing target ID straight into executeAdd for a clean swap
+            executeAdd(product, selections, addonModal.isEditing);
+            setAddonModal({ show: false });
+            }}
+            currency={currency}
+        />
+        )}
+    <div className="pos-header-nav">
+
+        {/* LEFT SIDE: Context Info */}
+        <div className="active-table-info">
+
+            <h3>{getContextLabel()}</h3>
+
+        </div>
+        <div>
+        {availableMenus.map((m) => (
+            <button
+                key={m.id}
+                className={`menu-tab ${activeMenu === m.id ? 'active' : ''}`}
+                onClick={() => setActiveMenu(m.id)}
+            >
+                {m.name}
+            </button>
+            ))} 
+        </div>
+
+        {/* RIGHT SIDE: ACTION BUTTON */}
+        {posContext?.type && (
+            <div style={{ display: 'flex', gap: '10px' }}>
+                
+                {/* BACK (safe) */}
+                <button className="btn" onClick={onBackToFloor}>
+                ← Back
+                </button>
+
+                {/* CANCEL TABLE (danger) */}
+                {posContext.type === 'table' && (
+                <button className="btn danger" onClick={handleCancelTable}>
+                    Cancel & Clear Table
+                </button>
+                )}
+
+                {/* optional: held cleanup */}
+                {/* {posContext.type === 'held' && (
+                <button className="btn danger" onClick={handleCancelTable}>
+                    Clear Held Order
+                </button>
+                )} */}
+
+            </div>
+            )}
+
+    </div>
   <div className="pos-main-container">
+
 
     <div className="pos-layout">
         {/* 2. Side Panel: Categories (Filtered by activeMenu) */}
         <div className="categories-panel">
-        {availableCategories
-            .filter(cat => cat.menu_id === activeMenu)
-            .sort((a, b) => a.sort_order - b.sort_order)
-            .map((cat) => (
-            <button
-                key={cat.id}
-                className={`category-btn ${activeCategory === cat.id ? 'active' : ''}`}
-                style={
-                cat.color && cat.color !== '#ffffff'
-                    ? { '--cat-color': cat.color }
-                    : {}
-                }
-                onClick={() => setActiveCategory(cat.id)}
-            >
-                {cat.name}
-            </button>
-            ))}
+            {availableCategories
+                .filter(cat => cat.menu_id === activeMenu)
+                .sort((a, b) => a.sort_order - b.sort_order)
+                .map((cat) => (
+                <button
+                    key={cat.id}
+                    className={`category-btn ${activeCategory === cat.id ? 'active' : ''}`}
+                    style={
+                    cat.color && cat.color !== '#ffffff'
+                        ? { '--cat-color': cat.color }
+                        : {}
+                    }
+                    onClick={() => setActiveCategory(cat.id)}
+                >
+                    {cat.name}
+                </button>
+                ))}
         </div>
 
         {/* 3. Middle Panel: Product Grid (Filtered by activeCategory) */}
@@ -217,13 +248,6 @@ export default function POS({
                 onChange={(e) => setDepositInput(e.target.value)}
                 />
             </div>
-            {/* {currentDepositCents > 0 && (
-            <div className="deposit-hint">
-                <small className="text-success">
-                Deducting {currency(currentDepositCents)} from total
-                </small>
-            </div>
-            )} */}
         </div>
         
         <div className="totals">
@@ -240,19 +264,6 @@ export default function POS({
                 <span>-{currency(totals.discountAmountCents)}</span>
             </div>
             )}
-
-            {/* {deposit > 0 && (
-            <div className="total-line deposit-row">
-                <span>Deposit Paid</span>
-                <span>-{currency(deposit)}</span>
-            </div>
-            )} */}
-            {/* {depositCents > 0 && (
-            <div className="total-line deposit-row">
-                <span>Deposit Paid</span>
-                <span>-{currency(depositCents)}</span> 
-            </div>
-            )} */}
 
             <div className="total-line">
             <span>VAT</span>
@@ -280,18 +291,6 @@ export default function POS({
         </div>
 
         <div className="actions-grid">
-            {/* <button 
-            className="btn danger" 
-            onClick={() => {
-                if (window.confirm("Are you sure you want to clear the cart and all inputs?")) {
-                setCart([]);
-                setDiscount(0);
-                setDepositInput("");
-                }
-            }}
-            >
-            Clear
-            </button> */}
             <button className="btn danger" onClick={handleClearCart}>
             Clear
             </button>

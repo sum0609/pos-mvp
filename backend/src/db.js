@@ -166,6 +166,18 @@ CREATE TABLE IF NOT EXISTS addon_items (
     FOREIGN KEY (addon_category_id) REFERENCES addon_categories(id) ON DELETE CASCADE
   );
 
+  CREATE TABLE IF NOT EXISTS table_sessions  (
+    id TEXT PRIMARY KEY,
+    table_id TEXT NOT NULL,
+    order_id TEXT NOT NULL,
+    covers INTEGER,
+    start_time TEXT DEFAULT CURRENT_TIMESTAMP,
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (table_id) REFERENCES tables(id),
+    FOREIGN KEY (order_id) REFERENCES orders(id)
+);
+
 -- PERFORMANCE INDEXES
 CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
@@ -207,3 +219,23 @@ try {
 } catch (e) {
   // Column already exists, ignore the error
 }
+
+try {
+  db.exec("ALTER TABLE orders ADD COLUMN table_id TEXT;");
+} catch (e) {
+  // Column already exists, ignore the error
+}
+
+try {
+  db.exec("ALTER TABLE table_sessions ADD COLUMN closed_at TEXT;");
+} catch (e) {
+  // Column already exists, ignore the error
+}
+
+try {
+  db.prepare("ALTER TABLE order_items ADD COLUMN note TEXT").run();
+} catch(e) { /* Column already exists, ignore error safely */ }
+
+try {
+  db.prepare("ALTER TABLE order_items ADD COLUMN addons TEXT").run();
+} catch(e) { /* Column already exists, ignore error safely */ }

@@ -52,6 +52,7 @@ export const api = {
 
   // --- Orders ---
   getOrders: (status) => request(status ? `/orders?status=${status}` : '/orders'),
+  getHeldOrdersWithNames: () => request('/orders/held'),
   getOrder: (id) => request(`/orders/${id}`),
 
   // Note: Ensure items in payload use 'unit_price_cents'
@@ -90,5 +91,24 @@ export const api = {
   getAddonItems: () => request('/addon_items'),
   createAddonItem: (payload) => request('/addon_items', {method: 'POST', body: JSON.stringify(payload)}),
   updateAddonItem: (id, payload) => request(`/addon_items/${id}`, { method: 'PUT', body: JSON.stringify(payload)}),
+
+
+  getTables_din_in: () => request('/tables_din_in'),
+  getOrderByTable: (tableId) => request(`/table_orders/${tableId}`),
+  createTableSession: (payload) => request('/table_sessions', {method: 'POST', body: JSON.stringify(payload)}),
+
+  syncTableOrder: (sessionId, cart) => request('/table_sessions/sync', {
+    method: 'POST',
+    body: JSON.stringify({ sessionId, cart })
+  }),
+
+  closeTableSession: (sessionId) => request('/close_session', {
+      method: 'POST',
+      body: JSON.stringify({ sessionId })}),
+
+  cancelTableSession: (sessionId) => request('/table_sessions/cancel', {
+    method: 'POST',
+    body: JSON.stringify({ sessionId })
+  }),
 };
 
